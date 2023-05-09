@@ -4,8 +4,6 @@ import { createHash } from "crypto"
 
 import type { Root as MDRoot } from "mdast"
 import { map as unistMap } from "unist-util-map"
-import { fromHtml } from "hast-util-from-html"
-import { toHtml } from "hast-util-to-html"
 import { load as fromYaml } from "js-yaml"
 
 import { fromMD, toMD } from "./md"
@@ -26,54 +24,38 @@ interface Ctx {
   readonly slug: string
   readonly filenames: ReadonlyArray<string>
   readonly meta: Record<string, Record<string, unknown>>
+  readonly hashedNames: Record<string, Record<string, string>>
 }
 
-const modifyImg = ({ slug, imgURLPrefix }: Ctx, url: string): string =>
-  pathJoin(imgURLPrefix, slug, url)
+const modifyImg = (
+  { slug, imgURLPrefix, hashedNames }: Ctx,
+  url: string,
+): string => pathJoin(imgURLPrefix, slug, hashedNames[slug][url])
 
-const modifyHtmlImg = (ctx: Ctx, html: string): string =>
-  toHtml(
-    unistMap(fromHtml(html), node => {
-      if (node.type !== "element") return node
+const replaceFilenames = (ctx: Ctx, s: string) => {
+  let value: string = s
+  for (const file of ctx.filenames) {
+    if (value.includes(file)) {
+      value = value.replace(file, modifyImg(ctx, file))
+    }
+  }
+  return value
+}
 
-      switch (node.tagName) {
-        case "img":
-          if (!node.properties) return node
-
-          const { src } = node.properties
-          if (typeof src !== "string") return node
-
-          return {
-            ...node,
-            properties: { ...node.properties, src: modifyImg(ctx, src) },
-          }
-
-        default:
-          return node
-      }
-    }),
-  )
-
-export const modifyMD = (ctx: Ctx, mdS: string): MDRoot =>
-  unistMap(fromMD(mdS), n => {
+export const modifyMD = (ctx: Ctx, md: MDRoot): MDRoot =>
+  unistMap(md, n => {
     switch (n.type) {
       case "image":
         return { ...n, url: modifyImg(ctx, n.url) }
 
       case "html":
-        return { ...n, value: modifyHtmlImg(ctx, n.value) }
+        return { ...n, value: replaceFilenames(ctx, n.value) }
 
-      case "yaml":
-        let value: string = n.value
-        for (const file of ctx.filenames) {
-          if (value.includes(file)) {
-            value = value.replace(file, modifyImg(ctx, file))
-          }
-        }
-
+      case "yaml": {
+        const value = replaceFilenames(ctx, n.value)
         ctx.meta[ctx.slug] = fromYaml(value) as Record<string, unknown>
-
         return { ...n, value }
+      }
 
       default:
         return n
@@ -89,7 +71,7 @@ const isMD = (filename: string): boolean => filename.endsWith(".md")
  *
  * bun runtime doesn't support `shake256` so we just substring
  */
-const hash = async (filepath: string, length: number = 6): Promise<string> =>
+const sha256 = async (filepath: string, length: number = 6): Promise<string> =>
   createHash("sha256")
     .update(await readFile(filepath))
     .digest("hex")
@@ -107,45 +89,58 @@ const hashFilename = (filename: string, hash: string): string => {
 }
 
 async function main() {
-  const inContent = "/Users/adelnizamutdinov/listenbox/front/content2"
-  const outContent = "/Users/adelnizamutdinov/listenbox/front/out"
+  const inContent = "/Users/adelnizamutdinov/listenbox/front/content/"
+  const outMD = "/Users/adelnizamutdinov/listenbox/front/public/guides/"
+  const outImages =
+    "/Users/adelnizamutdinov/listenbox/front/public/images/guides/"
+  const imgURLPrefix = "/images/guides/"
 
-  const mdDirs = (await readdir(inContent)).filter(isVisible)
+  const rawDirs = await readdir(inContent)
+  const mdDirs = rawDirs.filter(isVisible)
   if (!mdDirs.length) throw new Error("empty dir")
 
+  await mkdir(outMD, { recursive: true })
+
   const ctx: Ctx = {
-    imgURLPrefix: "images/",
+    imgURLPrefix,
     filenames: [],
     slug: "",
     meta: {},
+    hashedNames: {},
   }
 
-  for (const dir of mdDirs) {
-    const inDir = pathJoin(inContent, dir)
-    const outDir = pathJoin(outContent, dir)
+  for (const slug of mdDirs) {
+    ctx.hashedNames[slug] = {}
+
+    const inDir = pathJoin(inContent, slug)
 
     const rawFilenames = await readdir(inDir)
     const filenames = rawFilenames.filter(isVisible)
 
     const mdFilename = filenames.find(isMD)
-    if (!mdFilename) throw new Error(`no .md file in ${dir}`)
+    if (!mdFilename) throw new Error(`no .md file in ${slug}`)
 
-    await mkdir(outDir, { recursive: true })
+    const images = filenames.filter(x => !isMD(x))
+    if (images.length) {
+      const outImagesSlug = pathJoin(outImages, slug)
+      await mkdir(outImagesSlug, { recursive: true })
 
-    for (const filename of filenames.filter(x => !isMD(x))) {
-      const inPath = pathJoin(inDir, filename)
-      const hsh = await hash(inPath)
-      await copyFile(inPath, pathJoin(outDir, hashFilename(filename, hsh)))
+      for (const img of images) {
+        const inPath = pathJoin(inDir, img)
+        const hash = await sha256(inPath)
+        const hashedName = hashFilename(img, hash)
+
+        await copyFile(inPath, pathJoin(outImagesSlug, hashedName))
+        ctx.hashedNames[slug][img] = hashedName
+      }
     }
 
-    const tree = modifyMD(
-      { ...ctx, slug: dir, filenames },
-      await readFile(pathJoin(inDir, mdFilename), "utf-8"),
-    )
-    await writeFile(pathJoin(outDir, mdFilename), toMD(tree))
+    const mdS1 = await readFile(pathJoin(inDir, mdFilename), "utf-8")
+    const mds2 = toMD(modifyMD({ ...ctx, slug, filenames }, fromMD(mdS1)))
+    await writeFile(pathJoin(outMD, `${slug}.md`), mds2)
   }
 
-  await writeFile(pathJoin(outContent, "meta.json"), JSON.stringify(ctx.meta))
+  await writeFile(pathJoin(outMD, "meta.json"), JSON.stringify(ctx.meta))
 }
 
 await main()
