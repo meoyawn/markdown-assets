@@ -1,11 +1,15 @@
 {
   "name": "organize-md",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "type": "module",
   "bin": {
     "organize-md": "bin.mjs"
   },
+  "files": [
+    "dist/index.js",
+    "bin.mjs"
+  ],
   "scripts": {
     "build": "tsc",
     "index": "bun src/index.ts"
