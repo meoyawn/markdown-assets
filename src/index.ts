@@ -6,15 +6,23 @@ import type { Root as MDRoot } from "mdast"
 import { map as unistMap } from "unist-util-map"
 import { load as fromYaml } from "js-yaml"
 
-import { fromMD, toMD } from "./md"
+import { frontmatter, Preset } from "micromark-extension-frontmatter"
+import {
+  frontmatterFromMarkdown,
+  frontmatterToMarkdown,
+} from "mdast-util-frontmatter"
+import { fromMarkdown } from "mdast-util-from-markdown"
+import { toMarkdown } from "mdast-util-to-markdown"
 
-// for each markdown
-// for each image
-// copy image to /images
-// replace image path with /images
-// write the file back
+const fmOpts: Array<Preset> = ["yaml"]
+const md2fm = frontmatterFromMarkdown(fmOpts)
+const fm = frontmatter(fmOpts)
+const fm2md = frontmatterToMarkdown(fmOpts)
 
-// for remix: sync s3
+const fromMD = (mdS: string): MDRoot =>
+  fromMarkdown(mdS, { mdastExtensions: [md2fm], extensions: [fm] })
+
+const toMD = (tree: MDRoot): string => toMarkdown(tree, { extensions: [fm2md] })
 
 interface Ctx {
   /**
@@ -27,26 +35,28 @@ interface Ctx {
   readonly hashedNames: Record<string, Record<string, string>>
 }
 
-const modifyImg = (
+const replaceImg = (
   { slug, imgURLPrefix, hashedNames }: Ctx,
   url: string,
 ): string => pathJoin(imgURLPrefix, slug, hashedNames[slug][url])
 
-const replaceFilenames = (ctx: Ctx, s: string) => {
+const replaceFilenames = (ctx: Ctx, s: string): string => {
   let value: string = s
+
   for (const file of ctx.filenames) {
     if (value.includes(file)) {
-      value = value.replace(file, modifyImg(ctx, file))
+      value = value.replace(file, replaceImg(ctx, file))
     }
   }
+
   return value
 }
 
-export const modifyMD = (ctx: Ctx, md: MDRoot): MDRoot =>
+const modifyMD = (ctx: Ctx, md: MDRoot): MDRoot =>
   unistMap(md, n => {
     switch (n.type) {
       case "image":
-        return { ...n, url: modifyImg(ctx, n.url) }
+        return { ...n, url: replaceImg(ctx, n.url) }
 
       case "html":
         return { ...n, value: replaceFilenames(ctx, n.value) }
@@ -88,21 +98,29 @@ const hashFilename = (filename: string, hash: string): string => {
     : `${filename.slice(0, dotIdx)}-${hash}${filename.slice(dotIdx)}`
 }
 
-async function main() {
-  const inContent = "/Users/adelnizamutdinov/listenbox/front/content/"
-  const outMD = "/Users/adelnizamutdinov/listenbox/front/public/guides/"
-  const outImages =
-    "/Users/adelnizamutdinov/listenbox/front/public/images/guides/"
-  const imgURLPrefix = "/images/guides/"
+interface Config {
+  readonly contentDir: string
+  readonly mdOutDir: string
+  readonly imgOutDir: string
+  readonly imgURLPrefix: string
+}
 
-  const rawDirs = await readdir(inContent)
+async function main() {
+  const configFile = process.argv[2]
+  if (!configFile) throw new Error("pass a json config file")
+
+  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir }: Config = JSON.parse(
+    await readFile(configFile, "utf-8"),
+  )
+
+  const rawDirs = await readdir(contentDir)
   const mdDirs = rawDirs.filter(isVisible)
   if (!mdDirs.length) throw new Error("empty dir")
 
-  await mkdir(outMD, { recursive: true })
+  await mkdir(mdOutDir, { recursive: true })
 
   const ctx: Ctx = {
-    imgURLPrefix,
+    imgURLPrefix: imgURLPrefix,
     filenames: [],
     slug: "",
     meta: {},
@@ -112,7 +130,7 @@ async function main() {
   for (const slug of mdDirs) {
     ctx.hashedNames[slug] = {}
 
-    const inDir = pathJoin(inContent, slug)
+    const inDir = pathJoin(contentDir, slug)
 
     const rawFilenames = await readdir(inDir)
     const filenames = rawFilenames.filter(isVisible)
@@ -122,7 +140,7 @@ async function main() {
 
     const images = filenames.filter(x => !isMD(x))
     if (images.length) {
-      const outImagesSlug = pathJoin(outImages, slug)
+      const outImagesSlug = pathJoin(imgOutDir, slug)
       await mkdir(outImagesSlug, { recursive: true })
 
       for (const img of images) {
@@ -135,12 +153,12 @@ async function main() {
       }
     }
 
-    const mdS1 = await readFile(pathJoin(inDir, mdFilename), "utf-8")
-    const mds2 = toMD(modifyMD({ ...ctx, slug, filenames }, fromMD(mdS1)))
-    await writeFile(pathJoin(outMD, `${slug}.md`), mds2)
+    const mdIn = await readFile(pathJoin(inDir, mdFilename), "utf-8")
+    const mdOut = toMD(modifyMD({ ...ctx, slug, filenames }, fromMD(mdIn)))
+    await writeFile(pathJoin(mdOutDir, `${slug}.md`), mdOut)
   }
 
-  await writeFile(pathJoin(outMD, "meta.json"), JSON.stringify(ctx.meta))
+  await writeFile(pathJoin(mdOutDir, "meta.json"), JSON.stringify(ctx.meta))
 }
 
-await main()
+void main()
