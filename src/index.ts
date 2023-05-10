@@ -103,14 +103,28 @@ interface Config {
   readonly imgURLPrefix: string
 }
 
+const parseConfig = async (configPath: string): Promise<Config> => {
+  const content = await readFile(configPath, "utf-8")
+  const lower = configPath.toLowerCase()
+  switch (true) {
+    case lower.endsWith(".json"):
+      return JSON.parse(content)
+
+    case lower.endsWith(".yaml") || lower.endsWith(".yml"):
+      return fromYaml(content) as Config
+
+    default:
+      throw new Error(`unknown config file type: ${configPath}`)
+  }
+}
+
 // noinspection JSUnusedGlobalSymbols
 export async function main(): Promise<void> {
-  const configFile = process.argv[2]
-  if (!configFile) throw new Error("pass a json config file")
+  const configPath = process.argv[2]
+  if (!configPath) throw new Error("pass a json or yaml config file")
 
-  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir }: Config = JSON.parse(
-    await readFile(configFile, "utf-8"),
-  )
+  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir }: Config =
+    await parseConfig(configPath)
 
   const rawDirs = await readdir(contentDir)
   const mdDirs = rawDirs.filter(isVisible)
