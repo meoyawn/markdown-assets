@@ -50,8 +50,8 @@ const replaceFilenames = (ctx: Ctx, s: string): string => {
   return value
 }
 
-const modifyMD = (ctx: Ctx, md: MDRoot): MDRoot =>
-  unistMap(md, n => {
+const modifyMD = (ctx: Ctx, md: MDRoot): MDRoot => {
+  const ret = unistMap(md, n => {
     switch (n.type) {
       case "image":
         return { ...n, url: replaceImg(ctx, n.url) }
@@ -69,6 +69,11 @@ const modifyMD = (ctx: Ctx, md: MDRoot): MDRoot =>
         return n
     }
   })
+
+  ctx.meta[ctx.slug] ||= {}
+
+  return ret
+}
 
 const isVisible = (filename: string): boolean => !filename.startsWith(".")
 
@@ -128,7 +133,7 @@ export async function main(): Promise<void> {
 
   const rawDirs = await readdir(contentDir)
   const mdDirs = rawDirs.filter(isVisible)
-  if (!mdDirs.length) throw new Error("empty dir")
+  if (!mdDirs.length) throw new Error(`${contentDir} is empty`)
 
   await mkdir(mdOutDir, { recursive: true })
 
@@ -141,7 +146,7 @@ export async function main(): Promise<void> {
   }
 
   for (const slug of mdDirs) {
-    ctx.hashedNames[slug] = {}
+    ctx.hashedNames[slug] ||= {}
 
     const inDir = pathJoin(contentDir, slug)
 
