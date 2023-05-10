@@ -105,7 +105,7 @@ interface Config {
   readonly imgURLPrefix: string
 }
 
-async function main() {
+async function main(): Promise<void> {
   const configFile = process.argv[2]
   if (!configFile) throw new Error("pass a json config file")
 
