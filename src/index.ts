@@ -105,7 +105,7 @@ interface Config {
   readonly imgURLPrefix: string
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const configFile = process.argv[2]
   if (!configFile) throw new Error("pass a json config file")
 
@@ -160,5 +160,3 @@ async function main(): Promise<void> {
 
   await writeFile(pathJoin(mdOutDir, "meta.json"), JSON.stringify(ctx.meta))
 }
-
-void main()
