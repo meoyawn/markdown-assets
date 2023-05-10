@@ -1,18 +1,16 @@
-import { copyFile, mkdir, readdir, readFile, writeFile } from "fs/promises"
-import { join as pathJoin } from "path"
 import { createHash } from "crypto"
-
-import type { Root as MDRoot } from "mdast"
-import { map as unistMap } from "unist-util-map"
+import { copyFile, mkdir, readdir, readFile, writeFile } from "fs/promises"
 import { load as fromYaml } from "js-yaml"
-
-import { frontmatter, Preset } from "micromark-extension-frontmatter"
+import type { Root as MDRoot } from "mdast"
+import { fromMarkdown } from "mdast-util-from-markdown"
 import {
   frontmatterFromMarkdown,
   frontmatterToMarkdown,
 } from "mdast-util-frontmatter"
-import { fromMarkdown } from "mdast-util-from-markdown"
 import { toMarkdown } from "mdast-util-to-markdown"
+import { frontmatter, Preset } from "micromark-extension-frontmatter"
+import { join as pathJoin } from "path"
+import { map as unistMap } from "unist-util-map"
 
 const fmOpts: Array<Preset> = ["yaml"]
 const md2fm = frontmatterFromMarkdown(fmOpts)
@@ -105,6 +103,7 @@ interface Config {
   readonly imgURLPrefix: string
 }
 
+// noinspection JSUnusedGlobalSymbols
 export async function main(): Promise<void> {
   const configFile = process.argv[2]
   if (!configFile) throw new Error("pass a json config file")
