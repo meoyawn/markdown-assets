@@ -1,8 +1,9 @@
 {
   "name": "organize-md",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "type": "module",
+  "main": "dist/index.js",
   "bin": {
     "organize-md": "bin.mjs"
   },
