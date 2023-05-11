@@ -1,11 +1,8 @@
-import pkg from "./package.json" assert { type: "json" }
-import { build } from "esbuild"
+import pkg from "./package.json"
 
-await build({
-  external: Object.keys(pkg.dependencies),
+await Bun.build({
   outdir: "dist/",
-  entryPoints: ["src/index.ts"],
-  bundle: true,
-  platform: "node",
-  format: "esm",
+  entrypoints: ["src/index.ts"],
+  external: Object.keys(pkg.dependencies),
+  target: "node",
 })
