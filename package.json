@@ -1,15 +1,15 @@
 {
   "name": "organize-md",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "license": "MIT",
   "sideEffects": false,
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "bin": {
     "organize-md": "bin.mjs"
   },
   "files": [
-    "dist/index.js",
+    "dist/**/*",
     "bin.mjs"
   ],
   "scripts": {
