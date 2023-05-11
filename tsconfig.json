@@ -5,7 +5,8 @@
     "moduleResolution": "Node",
     "strict": true,
     "outDir": "dist/",
-    "incremental": true
+    "incremental": true,
+    "allowSyntheticDefaultImports": true
   },
   "files": ["src/index.ts"]
 }

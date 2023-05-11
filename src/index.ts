@@ -1,3 +1,5 @@
+import arg from "arg"
+import { watch } from "chokidar"
 import { createHash } from "crypto"
 import { copyFile, mkdir, readdir, readFile, writeFile } from "fs/promises"
 import { load as fromYaml } from "js-yaml"
@@ -123,13 +125,16 @@ const parseConfig = async (configPath: string): Promise<Config> => {
   }
 }
 
-// noinspection JSUnusedGlobalSymbols
-export async function main(): Promise<void> {
-  const configPath = process.argv[2]
-  if (!configPath) throw new Error("pass a json or yaml config file")
+const args = arg({
+  "--watch": Boolean,
+  "--version": Boolean,
+  "--help": Boolean,
 
-  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir }: Config =
-    await parseConfig(configPath)
+  "-w": "--watch",
+})
+
+const onContentChange = async (config: Config) => {
+  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir } = config
 
   const rawDirs = await readdir(contentDir)
   const mdDirs = rawDirs.filter(isVisible)
@@ -173,8 +178,26 @@ export async function main(): Promise<void> {
 
     const mdIn = await readFile(pathJoin(inDir, mdFilename), "utf-8")
     const mdOut = toMD(modifyMD({ ...ctx, slug, filenames }, fromMD(mdIn)))
-    await writeFile(pathJoin(mdOutDir, `${slug}.md`), mdOut)
+
+    const mdOutPath = pathJoin(mdOutDir, `${slug}.md`)
+    console.log(`writing ${mdOutPath}`)
+    await writeFile(mdOutPath, mdOut)
   }
 
-  await writeFile(pathJoin(mdOutDir, "meta.json"), JSON.stringify(ctx.meta))
+  const metaPath = pathJoin(mdOutDir, "meta.json")
+  console.log(`writing ${metaPath}`)
+  await writeFile(metaPath, JSON.stringify(ctx.meta))
+}
+
+// noinspection JSUnusedGlobalSymbols
+export const main = async (): Promise<void> => {
+  const configPath = args._[0]
+  if (!configPath) throw new Error("pass a json or yaml config file")
+  const config: Config = await parseConfig(configPath)
+
+  await onContentChange(config)
+
+  if (args["--watch"]) {
+    watch(config.contentDir).on("change", () => onContentChange(config))
+  }
 }
