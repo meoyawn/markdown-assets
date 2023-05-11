@@ -1,6 +1,6 @@
 {
   "name": "organize-md",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "license": "MIT",
   "sideEffects": false,
   "type": "module",
@@ -18,6 +18,8 @@
     "index": "bun src/index.ts"
   },
   "dependencies": {
+    "arg": "^5.0.2",
+    "chokidar": "^3.5.3",
     "js-yaml": "^4.1.0",
     "mdast-util-from-markdown": "^1.3.0",
     "mdast-util-frontmatter": "^1.0.1",
