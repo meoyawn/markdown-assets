@@ -4,7 +4,8 @@
     "target": "ES2022",
     "strict": true,
     "moduleResolution": "Node16",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noEmit": true
   },
   "include": ["src/"]
 }
