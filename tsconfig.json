@@ -6,7 +6,8 @@
     "strict": true,
     "outDir": "dist/",
     "incremental": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
   },
   "files": ["src/index.ts"]
 }

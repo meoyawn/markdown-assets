@@ -1,3 +1,4 @@
+import { version } from "../package.json"
 import arg from "arg"
 import { watch } from "chokidar"
 import { createHash } from "crypto"
@@ -125,14 +126,6 @@ const parseConfig = async (configPath: string): Promise<Config> => {
   }
 }
 
-const args = arg({
-  "--watch": Boolean,
-  "--version": Boolean,
-  "--help": Boolean,
-
-  "-w": "--watch",
-})
-
 const onContentChange = async (config: Config) => {
   const { contentDir, imgOutDir, imgURLPrefix, mdOutDir } = config
 
@@ -189,8 +182,35 @@ const onContentChange = async (config: Config) => {
   await writeFile(metaPath, JSON.stringify(ctx.meta))
 }
 
+const args = arg({
+  "--watch": Boolean,
+  "--version": Boolean,
+  "--help": Boolean,
+
+  "-w": "--watch",
+})
+
+const help = `
+Usage: organize-md [file]
+
+Options:
+  -w, --watch   Watch for changes in content dir
+  --version     Print version
+  --help        Print this help
+`
+
 // noinspection JSUnusedGlobalSymbols
 export const main = async (): Promise<void> => {
+  if (args["--version"]) {
+    console.log(version)
+    return
+  }
+
+  if (args["--help"]) {
+    console.log(help)
+    return
+  }
+
   const configPath = args._[0]
   if (!configPath) throw new Error("pass a json or yaml config file")
   const config: Config = await parseConfig(configPath)
