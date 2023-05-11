@@ -1,6 +1,6 @@
 {
   "name": "organize-md",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "license": "MIT",
   "sideEffects": false,
   "type": "module",
@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "deploy": "yarn build && yarn publish",
+    "deploy": "rm -rf dist/ && yarn build && yarn publish",
     "index": "bun src/index.ts"
   },
   "dependencies": {
