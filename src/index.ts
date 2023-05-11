@@ -4,14 +4,14 @@ import { watch } from "chokidar"
 import { createHash } from "crypto"
 import { copyFile, mkdir, readdir, readFile, writeFile } from "fs/promises"
 import { load as fromYaml } from "js-yaml"
-import type { Root as MDRoot } from "mdast"
+import { type Root as MDRoot } from "mdast"
 import { fromMarkdown } from "mdast-util-from-markdown"
 import {
   frontmatterFromMarkdown,
   frontmatterToMarkdown,
 } from "mdast-util-frontmatter"
 import { toMarkdown } from "mdast-util-to-markdown"
-import { frontmatter, Preset } from "micromark-extension-frontmatter"
+import { frontmatter, type Preset } from "micromark-extension-frontmatter"
 import { join as pathJoin } from "path"
 import { map as unistMap } from "unist-util-map"
 

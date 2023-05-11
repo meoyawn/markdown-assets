@@ -2,12 +2,9 @@
   "compilerOptions": {
     "module": "ES2022",
     "target": "ES2022",
-    "moduleResolution": "Node",
     "strict": true,
-    "outDir": "dist/",
-    "incremental": true,
-    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "Node16",
     "resolveJsonModule": true
   },
-  "files": ["src/index.ts"]
+  "include": ["src/"]
 }
