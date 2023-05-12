@@ -87,7 +87,7 @@ const isMD = (filename: string): boolean => filename.endsWith(".md")
  *
  * bun runtime doesn't support `shake256` so we just substring
  */
-const sha256 = async (filepath: string, length: number = 6): Promise<string> =>
+const sha256 = async (filepath: string, length: number = 8): Promise<string> =>
   createHash("sha256")
     .update(await readFile(filepath))
     .digest("hex")

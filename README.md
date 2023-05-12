@@ -6,7 +6,7 @@ It takes a JSON configuration file as an argument. Reads the contents of a speci
 markdown files and images, and outputs the modified markdown files and images to specified output directories. The
 script also generates a `meta.json` file containing metadata about the processed markdown files.
 
-#### Input structure:
+### Input structure:
 
 ```
 content
@@ -48,7 +48,7 @@ yarn add organize-md
 yarn organize-md config.json
 ```
 
-#### Output structure:
+### Output structure:
 
 ```
 public/guides
@@ -72,3 +72,40 @@ public/images/guides
     ├── rsscopy-0f6e3f.png
     └── spotify-ba1398.png
 ```
+
+## Framework configuration for optimized image loading
+
+### Next.js
+
+In `next.config.js` `headers()` array add this:
+
+```js
+;[
+  {
+    source: "/images/*",
+    headers: [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=31536000, immutable",
+      },
+    ],
+  },
+]
+```
+
+Where `/images/*` matches the `imgURLPrefix` value from the config file.
+
+[Next.js headers doc.](https://nextjs.org/docs/pages/api-reference/next-config-js/headers)
+
+### Remix deployed to Cloudflare Pages
+
+In `public/_headers` file add this:
+
+```
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
+```
+
+Where `/images/*` matches the `imgURLPrefix` value from the config file.
+
+[Cloudflare Pages headers doc.](https://developers.cloudflare.com/pages/platform/headers/)
