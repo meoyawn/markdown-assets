@@ -5,7 +5,8 @@
     "strict": true,
     "moduleResolution": "Node16",
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["bun-types"]
   },
-  "include": ["src/"]
+  "include": ["src/", "bundle.ts"]
 }

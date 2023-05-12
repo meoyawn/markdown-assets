@@ -3,7 +3,7 @@ import { build } from "bun"
 
 await build({
   outdir: "dist/",
-  entryPoints: ["src/index.ts"],
+  entrypoints: ["src/index.ts"],
   external: Object.keys(pkg.dependencies),
   target: "node",
 })
