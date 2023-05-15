@@ -1,4 +1,5 @@
-import { version } from "../package.json"
+import pkg from "../package.json"
+import { extractSlug } from "./slug.js"
 import arg from "arg"
 import { watch } from "chokidar"
 import { createHash } from "crypto"
@@ -126,7 +127,7 @@ const parseConfig = async (configPath: string): Promise<Config> => {
   }
 }
 
-const onContentChange = async (config: Config) => {
+export const onContentChange = async (config: Config) => {
   const { contentDir, imgOutDir, imgURLPrefix, mdOutDir } = config
 
   const rawDirs = await readdir(contentDir)
@@ -143,16 +144,17 @@ const onContentChange = async (config: Config) => {
     hashedNames: {},
   }
 
-  for (const slug of mdDirs) {
+  for (const dirname of mdDirs) {
+    const slug = extractSlug(dirname)
     ctx.hashedNames[slug] ||= {}
 
-    const inDir = pathJoin(contentDir, slug)
+    const inDir = pathJoin(contentDir, dirname)
 
     const rawFilenames = await readdir(inDir)
     const filenames = rawFilenames.filter(isVisible)
 
     const mdFilename = filenames.find(isMD)
-    if (!mdFilename) throw new Error(`no .md file in ${slug}`)
+    if (!mdFilename) throw new Error(`no .md file in ${dirname}`)
 
     const images = filenames.filter(x => !isMD(x))
     if (images.length) {
@@ -202,7 +204,7 @@ Options:
 // noinspection JSUnusedGlobalSymbols
 export const main = async (): Promise<void> => {
   if (args["--version"]) {
-    console.log(version)
+    console.log(pkg.version)
     return
   }
 

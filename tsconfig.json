@@ -8,5 +8,5 @@
     "noEmit": true,
     "types": ["bun-types"]
   },
-  "include": ["src/", "bundle.ts"]
+  "include": ["src/", "bundle.ts", "test/"]
 }
