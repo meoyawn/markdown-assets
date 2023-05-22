@@ -106,7 +106,7 @@ const hashFilename = (filename: string, hash: string): string => {
     : `${filename.slice(0, dotIdx)}-${hash}${filename.slice(dotIdx)}`
 }
 
-const configSchema = z.object({
+const Config = z.object({
   contentDir: z
     .string()
     .regex(/\/$/)
@@ -118,8 +118,7 @@ const configSchema = z.object({
     .regex(/^\//)
     .transform(x => x as `/${string}`),
 })
-
-type Config = z.infer<typeof configSchema>
+type Config = z.infer<typeof Config>
 
 const parseConfig = async (configPath: string): Promise<Config> => {
   const content = await readFile(configPath, "utf-8")
@@ -137,8 +136,7 @@ const parseConfig = async (configPath: string): Promise<Config> => {
 }
 
 export const onContentChange = async (config: Config) => {
-  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir } =
-    configSchema.parse(config)
+  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir } = Config.parse(config)
 
   const rawDirs = await readdir(contentDir)
   const mdDirs = rawDirs.filter(isVisible)
