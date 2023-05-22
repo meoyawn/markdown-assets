@@ -5,6 +5,10 @@ test("just slug", () => {
   expect(extractSlug("slug1")).toBe("slug1")
 })
 
+test("empty", () => {
+  expect(extractSlug("")).toBe("")
+})
+
 test("vabc-vabc", () => {
   expect(extractSlug("vabc-vabc")).toBe("vabc-vabc")
 })
