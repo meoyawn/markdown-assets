@@ -15,6 +15,7 @@ import { toMarkdown } from "mdast-util-to-markdown"
 import { frontmatter, type Preset } from "micromark-extension-frontmatter"
 import { join as pathJoin } from "path"
 import { map as unistMap } from "unist-util-map"
+import { z } from "zod"
 
 const fmOpts: Array<Preset> = ["yaml"]
 const md2fm = frontmatterFromMarkdown(fmOpts)
@@ -105,12 +106,14 @@ const hashFilename = (filename: string, hash: string): string => {
     : `${filename.slice(0, dotIdx)}-${hash}${filename.slice(dotIdx)}`
 }
 
-interface Config {
-  readonly contentDir: string
-  readonly mdOutDir: string
-  readonly imgOutDir: string
-  readonly imgURLPrefix: string
-}
+const configSchema = z.object({
+  contentDir: z.string().regex(/\/$/),
+  mdOutDir: z.string().nonempty(),
+  imgOutDir: z.string().nonempty(),
+  imgURLPrefix: z.string().regex(/^\//),
+})
+
+type Config = z.infer<typeof configSchema>
 
 const parseConfig = async (configPath: string): Promise<Config> => {
   const content = await readFile(configPath, "utf-8")
@@ -128,7 +131,8 @@ const parseConfig = async (configPath: string): Promise<Config> => {
 }
 
 export const onContentChange = async (config: Config) => {
-  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir } = config
+  const { contentDir, imgOutDir, imgURLPrefix, mdOutDir } =
+    configSchema.parse(config)
 
   const rawDirs = await readdir(contentDir)
   const mdDirs = rawDirs.filter(isVisible)
