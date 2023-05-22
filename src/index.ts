@@ -107,10 +107,16 @@ const hashFilename = (filename: string, hash: string): string => {
 }
 
 const configSchema = z.object({
-  contentDir: z.string().regex(/\/$/),
+  contentDir: z
+    .string()
+    .regex(/\/$/)
+    .transform(x => x as `${string}/`),
   mdOutDir: z.string().nonempty(),
   imgOutDir: z.string().nonempty(),
-  imgURLPrefix: z.string().regex(/^\//),
+  imgURLPrefix: z
+    .string()
+    .regex(/^\//)
+    .transform(x => x as `/${string}`),
 })
 
 type Config = z.infer<typeof configSchema>
