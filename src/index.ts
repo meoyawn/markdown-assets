@@ -192,14 +192,6 @@ export const onContentChange = async (config: Config): Promise<void> => {
   await writeFile(metaPath, JSON.stringify(ctx.meta))
 }
 
-const args = arg({
-  "--watch": Boolean,
-  "--version": Boolean,
-  "--help": Boolean,
-
-  "-w": "--watch",
-})
-
 const help = `
 Usage: organize-md [file]
 
@@ -211,6 +203,14 @@ Options:
 
 // noinspection JSUnusedGlobalSymbols
 export const main = async (): Promise<void> => {
+  const args = arg({
+    "--watch": Boolean,
+    "--version": Boolean,
+    "--help": Boolean,
+
+    "-w": "--watch",
+  })
+
   if (args["--version"]) {
     console.log(pkg.version)
     return
