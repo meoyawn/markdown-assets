@@ -135,7 +135,7 @@ const parseConfig = async (configPath: string): Promise<Config> => {
   }
 }
 
-export const onContentChange = async (config: Config) => {
+export const onContentChange = async (config: Config): Promise<void> => {
   const { contentDir, imgOutDir, imgURLPrefix, mdOutDir } = Config.parse(config)
 
   const rawDirs = await readdir(contentDir)
