@@ -77,7 +77,7 @@ const modifyMD = (ctx: Ctx, md: MDRoot): MDRoot => {
 
   ctx.meta[ctx.slug] ||= {}
 
-  return ret
+  return ret as MDRoot
 }
 
 const isVisible = (filename: string): boolean => !filename.startsWith(".")

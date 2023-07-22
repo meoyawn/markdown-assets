@@ -1,6 +1,12 @@
 {
   "arrowParens": "avoid",
+  "proseWrap": "always",
   "semi": false,
+  "singleQuote": false,
   "trailingComma": "all",
-  "singleQuote": false
+  "pluginSearchDirs": [],
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports",
+    "prettier-plugin-packagejson"
+  ]
 }
