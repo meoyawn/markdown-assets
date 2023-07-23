@@ -1,10 +1,6 @@
-# organize-md
+# markdown-assets
 
-Builds your markdown folder structure to be ready for static deployment.
-
-It takes a JSON configuration file as an argument. Reads the contents of a specified directory, processes
-markdown files and images, and outputs the modified markdown files and images to specified output directories. The
-script also generates a `meta.json` file containing metadata about the processed markdown files.
+Builds your markdown with relative image paths for deployment.
 
 ### Input structure:
 
@@ -43,9 +39,9 @@ touch config.js
 ```
 
 ```sh
-yarn add organize-md
+yarn add markdown-assets
 
-yarn organize-md config.json
+yarn markdown-assets config.json
 ```
 
 ### Output structure:

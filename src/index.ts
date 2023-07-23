@@ -193,7 +193,7 @@ export const onContentChange = async (config: Config): Promise<void> => {
 }
 
 const help = `
-Usage: organize-md [file]
+Usage: markdown-assets [file]
 
 Options:
   -w, --watch   Watch for changes in content dir
