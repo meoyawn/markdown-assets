@@ -1,12 +1,12 @@
 {
-  "name": "organize-md",
-  "version": "0.3.2",
+  "name": "markdown-assets",
+  "version": "0.3.3",
   "license": "MIT",
   "sideEffects": false,
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "organize-md": "bin.mjs"
+    "markdown-assets": "bin.mjs"
   },
   "files": [
     "dist/**/*",
